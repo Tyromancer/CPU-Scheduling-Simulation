@@ -24,8 +24,7 @@ public class Process {
         // TODO
     }
     
-    public Process(Process p)
-    {
+    public Process(Process p) {
     	
     }
 
