@@ -11,13 +11,16 @@ public class Process {
     private int cpuBurst;
     private int waitTime;
     private int arriveTime;
+    private int burstNum;
     private String status;
     private int remainTime;
 
-    public Process(String id, Rand48 rand) {
+    public Process(String id, Rand48 rand, Double lamb) {
         this.id = id;
-        this.arriveTime = (int) rand.nextDouble();
-        
+        this.arriveTime = (int) (Math.log(rand.nextDouble())*-1/lamb);
+        this.burstNum = (int) (rand.nextDouble() * 100) + 1;
+        System.out.println("ArriveTime: " + arriveTime);
+        System.out.println("BurstNum: " + burstNum);
         // TODO
     }
     
