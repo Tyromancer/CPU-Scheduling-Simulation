@@ -4,6 +4,7 @@ import java.io.*;
 public class Project {
 
     public static void main(String[] args) {
+
     	if (!(args.length == 7 || args.length == 8)) {
 			System.err.println("ERROR: Invalid number of command line arguments");
 			return;
@@ -67,6 +68,7 @@ public class Project {
 			System.err.println("ERROR: Invalid input for alpha: " + e.getMessage());
 			return;
 		}
+
 
 		int timeSlice;
 		try {
