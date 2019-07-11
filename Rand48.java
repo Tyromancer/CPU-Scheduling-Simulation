@@ -2,12 +2,13 @@ import java.io.*;
 import java.util.*;
 
 public final class Rand48 {
-
+    public static Rand48 RNG;
     private static final long MODULO = (1L << 48);
 
     private long gen;
 
     public Rand48() {
+        Rand48.RNG = this;
         setSeed(System.currentTimeMillis());
     }
 
