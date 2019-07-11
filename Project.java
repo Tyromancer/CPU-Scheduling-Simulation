@@ -4,14 +4,14 @@ import java.io.*;
 public class Project {
 
     public static void main(String[] args) {
-    	if (args.length != 7 || args.length !- 8) {
+    	if (args.length != 7 || args.length != 8) {
 		System.out.println("ERROR: Invalid number of command line arguments");
 		return;
 	}
 
 	long seed;
 	try {
-		seed = Long.parseLong(argv\s[1]);
+		seed = Long.parseLong(args[1]);
 	} catch (NumberFormatException e) {
 		System.out.println("ERROR: Invalid input for seed " + e.getMessage());
 		return;
