@@ -2,11 +2,11 @@ import java.util.*;
 import java.lang.*;
 
 public class Process {
-	//public static final String 
-	public static final String READY = "READY";
-	public static final String RUNNING = "RUNNING";
-	public static final String BLOCKED = "BLOCKED";
-	public static final String ENDED = "ENDED";
+	public static final int NA = 0;
+	public static final int READY = 1;
+	public static final int RUNNING = 2;
+	public static final int BLOCKED = 3;
+	public static final int ENDED = 4;
 	
     private String id;
     private int turnAroundTime;
@@ -14,7 +14,7 @@ public class Process {
     private int waitTime;
     private int arriveTime;
     private int burstNum;
-    private String status;
+    private int status;
     private int remainTime;
     private int[] burstTimes;
     private int[] ioTimes;
@@ -37,7 +37,7 @@ public class Process {
         // TODO
     }
 
-    public String status()
+    public int status()
     {
     	return this.status;
     }
