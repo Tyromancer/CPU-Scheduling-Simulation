@@ -2,7 +2,7 @@ import java.io.*;
 import java.util.*;
 
 public final class Rand48 {
-    public static Rand48 RNG;
+    public static Rand48 RNG = new Rand48();
     private static final long MODULO = (1L << 48);
 
     private long gen;
