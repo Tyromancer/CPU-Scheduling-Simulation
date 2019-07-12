@@ -48,6 +48,11 @@ public class Process {
         burstTimes[burstSize - 1] = (int) (random()) + 1;
         // TODO
     }
+    
+    public String id()
+    {
+    	return this.id;
+    }
 
     public int status()
     {
