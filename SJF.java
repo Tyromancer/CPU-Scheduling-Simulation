@@ -25,7 +25,7 @@ public class SJF {
             // TODO: generate process
 
             //                                         id,                               rand ,      lamb
-            this.processes.add(new Process(Character.toString((char) 65 + i), Rand48.RNG, Project.lamb));
+            this.processes.add(new Process(Character.toString((char) (65 + i)), Rand48.RNG, Project.lamb));
         }
 
 
