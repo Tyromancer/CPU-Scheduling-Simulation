@@ -94,6 +94,8 @@ public class Project {
 		}
 
 		// TODO: create algo instances and run them
+		SJF sjf = new SJF();
+		sjf.runSimulation();
     }
 
 }
