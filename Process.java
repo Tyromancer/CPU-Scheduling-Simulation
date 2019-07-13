@@ -83,6 +83,16 @@ public class Process {
     	return this.burstSize;
     }
     
+    public int getIOTime()
+    {
+    	return this.ioTimes[burstIndex];
+    }
+    
+    public boolean isLastBurst()
+    {
+    	return this.burstIndex == burstSize-1;
+    }
+    
     public boolean isEnded()
     {
     	return this.burstIndex == burstSize-1 && remainingTime == 0;
