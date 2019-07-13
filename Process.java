@@ -1,7 +1,11 @@
 import java.util.*;
+
+import com.sun.xml.internal.ws.api.streaming.XMLStreamReaderFactory.Default;
+
 import java.lang.*;
 
 public class Process {
+	public static Process EMPTY = null;
 	public static final int NA = 0;
 	public static final int READY = 1;
 	public static final int RUNNING = 2;
@@ -38,14 +42,20 @@ public class Process {
         this.burstIndex = 0;
         this.burstTimes = new int[burstSize];
         this.ioTimes = new int[burstSize];
-        this.remainTime = burstTimes[0];
-        this.status = arriveTime==0? READY:NA;
+        this.remainTime = arriveTime;
+        this.status = NA;
         
         for (int i = 0; i < burstSize - 1; i++) {
 			burstTimes[i] = (int) (random()) + 1;
 			ioTimes[i] = (int) (random()) + 1;
 		}
         burstTimes[burstSize - 1] = (int) (random()) + 1;
+        
+        if(arriveTime == 0)
+        {
+        	this.status = READY;
+        	remainTime = burstTimes[burstIndex];
+        }
         // TODO
     }
     
@@ -69,9 +79,82 @@ public class Process {
     	return this.arriveTime;
     }
     
-    public void tick()
+    public int burstIndex()
     {
-    	
+    	return this.burstIndex;
+    }
+    
+    public int burstSize()
+    {
+    	return this.burstSize;
+    }
+    
+    public void running()
+    {
+    	this.status = RUNNING;
+    }
+    
+    /**
+     * 
+     * @return true if status is changed in this tick
+     */
+    public boolean tick()
+    {
+    	switch (status) {
+		case NA:
+			remainTime--;
+			if(remainTime == 0)
+			{
+				status = READY;
+				remainTime = burstTimes[burstIndex];
+				return true;
+			}
+			break;
+
+		//TODO:
+		case READY:
+			throw new RuntimeException("FUCK YOU BUG");
+			//return false;
+			
+		case RUNNING:
+			remainTime--;
+			if(remainTime == 0)
+			{
+				if(burstIndex == burstSize - 1)
+				{
+					status = ENDED;
+					return true;
+				}
+				else
+				{
+					remainTime = ioTimes[burstIndex];
+					status = BLOCKED;
+					return true;
+				}
+			}
+			break;
+			
+		case BLOCKED:
+			remainTime--;
+			if(remainTime == 0)
+			{
+				burstIndex++;
+				remainTime = burstTimes[burstIndex];
+				status = READY;
+				return true;
+			}
+			break;
+			
+		//TODO:
+		case ENDED:
+			System.out.println("FUCK YOU BUG, Process " + id + "ENDED");
+			return false;
+			
+		default:
+			System.out.println("FUCK YOU BUG");
+			return false;
+		}
+    	return false;
     }
     
     public int estimateTime()
