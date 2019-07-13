@@ -26,6 +26,7 @@ public class Process {
     private int burstIndex;
     private int[] burstTimes;
     private int[] ioTimes;
+    private int[] estimateBurstTimes;
 
     public Process(String id) {
         this.id = id;
@@ -33,12 +34,19 @@ public class Process {
         this.burstSize = (int) (Rand48.RNG.nextDouble() * 100) + 1;
         this.burstIndex = 0;
         this.burstTimes = new int[burstSize];
+        this.estimateBurstTimes = new int[burstSize];
         this.ioTimes = new int[burstSize];
         this.remainingTime = arriveTime;
         this.state = ProcessState.NA;
         
         for (int i = 0; i < burstSize - 1; i++) {
-			burstTimes[i] = (int) (random()) + 1;
+			burstTimes[i] = (int) (random()) + 1;    // generate actual burst times
+
+			if (i == 0) {
+				estimateBurstTimes[i] = (int) Math.ceil(1.0 / Project.lamb);   //
+			} else {
+				estimateBurstTimes[i] = (int) Math.ceil((Project.alpha * burstTimes[i - 1]) / (Project.alpha * estimateBurstTimes[i - 1]));
+			}
 			ioTimes[i] = (int) (random()) + 1;
 		}
         burstTimes[burstSize - 1] = (int) (random()) + 1;
@@ -201,10 +209,10 @@ public class Process {
 //		}
 //    	return false;
     }
-    
+
     public int estimateTime()
-    {
-    	return 0;
+	{
+    	return estimateBurstTimes[burstIndex];
     }
     
     private double random()
