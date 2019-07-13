@@ -16,14 +16,14 @@ public class SJF {
 //				return p1.arriveTime() - p2.arriveTime();
 //			}
 //		});
-        this.readyQueue = new PriorityQueue<>((Process o1, Process o2) -> {
-                if (o1.currentBurstTime() == o2.currentBurstTime()) {
-                    return o1.id().compareTo(o2.id());
-                } else {
-                    return o1.currentBurstTime() - o2.currentBurstTime();
-                }
-
-        });
+//        this.readyQueue = new PriorityQueue<>((Process o1, Process o2) -> {
+//                if (o1.currentBurstTime() == o2.currentBurstTime()) {
+//                    return o1.id().compareTo(o2.id());
+//                } else {
+//                    return o1.currentBurstTime() - o2.currentBurstTime();
+//                }
+//
+//        });
         this.readyList = new LinkedList<>();
 
         this.ioQueue = new PriorityQueue<>(Comparator.comparing(Process::remainingTime));

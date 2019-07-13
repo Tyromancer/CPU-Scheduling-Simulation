@@ -1,1 +1,1 @@
-public enum ProcessState { NA, READY, RUNNING, BLOCKED, ENDED, PREEMPT }
+public enum ProcessState { NA, READY, SWITCHIN, RUNNING, SWITCHOUT, BLOCKED, ENDED}
