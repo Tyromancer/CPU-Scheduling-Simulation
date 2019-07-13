@@ -42,13 +42,14 @@ public class FCFS {
 		}
         
         Process running = Process.EMPTY;
-        int time = 1;
+        int time = 0;
         int endNum = 0;
         int processNum = processes.length;
         LinkedList<Process> temp = new LinkedList<Process>();
         
         while(running != Process.EMPTY || endNum != processNum)
         {
+        	time++;
         	temp.clear();
         	
         	//Ticking processes in ioList
@@ -83,22 +84,27 @@ public class FCFS {
 						
 					case RUNNING:
 						running.setState(ProcessState.SWITCHOUT);
-        				System.out.println(String.format("time %dms: Process %s completed a CPU burst; %d bursts to go %s", time, running.id(), running.burstSize() - running.burstIndex() - 1, queueInfo()));
-						System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), running.getIOTime(), queueInfo()));
-        				break;
+						if(running.isLastBurst())
+						{
+							System.out.println(String.format("time %dms: Process %s terminated %s", time, running.id(), queueInfo()));
+						}
+						else
+						{
+							System.out.println(String.format("time %dms: Process %s completed a CPU burst; %d bursts to go %s", time, running.id(), running.burstSize() - running.burstIndex() - 1, queueInfo()));
+							System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()));
+	        			}
+						break;
 						
 					case SWITCHOUT:
 						if(running.isEnded())
 						{
 							endNum++;
 							running.setState(ProcessState.ENDED);
-	        				System.out.println(String.format("Process %s has terminated at %dms IOList: %d", running.id(), time, ioList.size()));
-						}
+	        			}
 						else
 						{
 							running.setState(ProcessState.BLOCKED);
-	        				System.out.println(String.format("Process %s start io at %dms IOList: %d", running.id(), time, ioList.size()));
-							ioList.add(running);
+	        				ioList.add(running);
 						}
 						
 						running = Process.EMPTY;
@@ -119,8 +125,8 @@ public class FCFS {
         			if(running.tick())
         			{
         				running.setState(ProcessState.RUNNING);
-        				System.out.println(String.format("Process %s start using CPU at %dms IOList: %d", running.id(), time, ioList.size()));
-        			}
+        				System.out.println(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()));
+					}
     			}
         	}
         	
@@ -129,7 +135,7 @@ public class FCFS {
         		p.nextBurst();
         		ioList.remove(p);
         		readyList.add(p);
-				System.out.println(String.format("Process %s has ended IO at %dms", p.id(), time));
+				System.out.println(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()));
         	}
         	for(int i = 0; i < arriveNum; i++)
         	{
@@ -137,10 +143,9 @@ public class FCFS {
     			readyList.add(p);
 				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", time, p.id(), queueInfo()));
         	}
-        	
-        	time++;
         }
         
+        System.out.println(String.format("time %dms: Simulator ended for FCFS %s", time, queueInfo()));
         return result;
     }
     
