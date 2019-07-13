@@ -33,7 +33,7 @@ public class FCFS {
         	{
         		processes[i].setState(ProcessState.READY);
         		readyList.add(processes[i]);
-				System.out.println(String.format("time %ms: Process %s arrived; added to ready queue %s", 0, processes[i].id(), queueInfo()));
+				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", 0, processes[i].id(), queueInfo()));
         	}
         	else
         	{
