@@ -51,6 +51,8 @@ public class Process {
 		}
         burstTimes[burstSize - 1] = (int) (random()) + 1;
         
+        System.out.println(String.format("Process %s [NEW] (arrival time %d ms) %d CPU bursts", id, arriveTime, burstSize));
+        
     }
 
     public ProcessState state() 
@@ -151,73 +153,6 @@ public class Process {
     	}
     	remainingTime--;
     	return remainingTime == 0;
-    	
-//    	switch (this.state) {
-//        case NA:
-//        	// if the process has not arrived yet, decrease remaining time by one
-//			remainingTime--;
-//			// remaining time == 0 --> process has just arrived and is ready to use the cpu
-//			if(remainingTime == 0)
-//			{
-//			    this.state = ProcessState.READY;
-//				// status = READY;
-//				remainingTime = burstTimes[burstIndex];
-//				return true;
-//			}
-//			break;
-//
-//		//TODO:
-//		case READY:
-//			throw new RuntimeException("FUCK YOU BUG");
-//			//return false;
-//			
-//		case RUNNING:             // the process is using the cpu
-//			remainingTime--;      // decrease remaining cpu burst time by one
-//
-//			if(remainingTime == 0)
-//			{
-//				if(burstIndex == burstSize - 1)         // finished current cpu burst
-//				{
-//					// status = ENDED;
-//                    this.state = ProcessState.ENDED;    // current burst is the last cpu burst of this process --> process finished
-//					return true;
-//				}
-//				else
-//				{
-//					// more cpu bursts togo --> go to io burst
-//					remainingTime = ioTimes[burstIndex];
-//					this.state = ProcessState.BLOCKED;
-//					// status = BLOCKED;
-//					return true;
-//				}
-//			}
-//			break;
-//			
-//		case BLOCKED:
-//			// process is in io burst
-//			// decrease current io burst time by one
-//			remainingTime--;
-//
-//			if(remainingTime == 0)   // process finishes io burst
-//			{
-//				burstIndex++;                               // goto next cpu burst
-//				remainingTime = burstTimes[burstIndex];     // set remaining time for cpu burst
-//				this.state = ProcessState.READY;            // change process state
-//				// status = READY;
-//				return true;
-//			}
-//			break;
-//			
-//		//TODO:
-//		case ENDED:
-//			System.out.println("FUCK YOU BUG, Process " + id + "ENDED");
-//			return false;
-//			
-//		default:
-//			System.out.println("FUCK YOU BUG");
-//			return false;
-//		}
-//    	return false;
     }
 
     public int estimateTime()
