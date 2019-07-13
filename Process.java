@@ -1,16 +1,11 @@
 import java.util.*;
 
-import com.sun.xml.internal.ws.api.streaming.XMLStreamReaderFactory.Default;
 
 import java.lang.*;
 
+
 public class Process {
-	public static Process EMPTY = null;
-	public static final int NA = 0;
-	public static final int READY = 1;
-	public static final int RUNNING = 2;
-	public static final int BLOCKED = 3;
-	public static final int ENDED = 4;
+	public static final Process EMPTY = null;
 	
 	public static Process[] generateProcesses()
 	{
@@ -22,15 +17,15 @@ public class Process {
 		
 		return processed;
 	}
-	
+
+	private ProcessState state;
     private String id;
     private int turnAroundTime;
     private int cpuBurst;
     private int waitTime;
     private int arriveTime;
     private int burstSize;
-    private int status;
-    private int remainTime;
+    private int remainingTime;
     private int burstIndex;
     private int[] burstTimes;
     private int[] ioTimes;
@@ -42,8 +37,9 @@ public class Process {
         this.burstIndex = 0;
         this.burstTimes = new int[burstSize];
         this.ioTimes = new int[burstSize];
-        this.remainTime = arriveTime;
-        this.status = NA;
+        this.remainingTime = arriveTime;
+        // this.status = NA;
+        this.state = ProcessState.NA;
         
         for (int i = 0; i < burstSize - 1; i++) {
 			burstTimes[i] = (int) (random()) + 1;
@@ -53,26 +49,31 @@ public class Process {
         
         if(arriveTime == 0)
         {
-        	this.status = READY;
-        	remainTime = burstTimes[burstIndex];
+        	// this.status = READY;
+        	this.state = ProcessState.READY;
+        	remainingTime = burstTimes[burstIndex];
         }
         // TODO
     }
-    
+
+    public ProcessState getState() { return this.state; }
+
     public String id()
     {
     	return this.id;
     }
 
-    public int status()
-    {
-    	return this.status;
-    }
+//    public int status()
+//    {
+//    	return this.status;
+//    }
     
-    public int remainTime()
+    public int remainingTime()
     {
-    	return this.remainTime;
+    	return this.remainingTime;
     }
+
+    public int currentBurstTime() { return this.burstTimes[this.burstIndex]; }
     
     public int arriveTime()
     {
@@ -91,7 +92,8 @@ public class Process {
     
     public void running()
     {
-    	this.status = RUNNING;
+    	// this.status = RUNNING;
+        this.state = ProcessState.RUNNING;
     }
     
     /**
@@ -100,13 +102,16 @@ public class Process {
      */
     public boolean tick()
     {
-    	switch (status) {
-		case NA:
-			remainTime--;
-			if(remainTime == 0)
+    	switch (this.state) {
+        case NA:
+        	// if the process has not arrived yet, decrease remaining time by one
+			remainingTime--;
+			// remaining time == 0 --> process has just arrived and is ready to use the cpu
+			if(remainingTime == 0)
 			{
-				status = READY;
-				remainTime = burstTimes[burstIndex];
+			    this.state = ProcessState.READY;
+				// status = READY;
+				remainingTime = burstTimes[burstIndex];
 				return true;
 			}
 			break;
@@ -116,31 +121,39 @@ public class Process {
 			throw new RuntimeException("FUCK YOU BUG");
 			//return false;
 			
-		case RUNNING:
-			remainTime--;
-			if(remainTime == 0)
+		case RUNNING:             // the process is using the cpu
+			remainingTime--;      // decrease remaining cpu burst time by one
+
+			if(remainingTime == 0)
 			{
-				if(burstIndex == burstSize - 1)
+				if(burstIndex == burstSize - 1)         // finished current cpu burst
 				{
-					status = ENDED;
+					// status = ENDED;
+                    this.state = ProcessState.ENDED;    // current burst is the last cpu burst of this process --> process finished
 					return true;
 				}
 				else
 				{
-					remainTime = ioTimes[burstIndex];
-					status = BLOCKED;
+					// more cpu bursts togo --> go to io burst
+					remainingTime = ioTimes[burstIndex];
+					this.state = ProcessState.BLOCKED;
+					// status = BLOCKED;
 					return true;
 				}
 			}
 			break;
 			
 		case BLOCKED:
-			remainTime--;
-			if(remainTime == 0)
+			// process is in io burst
+			// decrease current io burst time by one
+			remainingTime--;
+
+			if(remainingTime == 0)   // process finishes io burst
 			{
-				burstIndex++;
-				remainTime = burstTimes[burstIndex];
-				status = READY;
+				burstIndex++;                               // goto next cpu burst
+				remainingTime = burstTimes[burstIndex];     // set remaining time for cpu burst
+				this.state = ProcessState.READY;            // change process state
+				// status = READY;
 				return true;
 			}
 			break;

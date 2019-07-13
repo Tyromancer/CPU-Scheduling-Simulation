@@ -13,21 +13,23 @@ public class FCFS {
     
     public FCFS() {
         this.processes = Process.generateProcesses();
-        this.arriveQueue = new PriorityQueue<Process>(new Comparator<Process>() {
-
-			@Override
-			public int compare(Process p1, Process p2) {
-				return p1.arriveTime() - p2.arriveTime();
-			}
-		});
+//        this.arriveQueue = new PriorityQueue<Process>(new Comparator<Process>() {
+//
+//			@Override
+//			public int compare(Process p1, Process p2) {
+//				return p1.arriveTime() - p2.arriveTime();
+//			}
+//		});
+        this.arriveQueue = new PriorityQueue<>(Comparator.comparing(Process::arriveTime));
         this.readyList = new LinkedList<Process>();
-        this.ioQueue = new PriorityQueue<Process>(new Comparator<Process>() {
-
-			@Override
-			public int compare(Process p1, Process p2) {
-				return p1.remainTime() - p2.remainTime();
-			}
-		});
+        this.ioQueue = new PriorityQueue<>(Comparator.comparing(Process::remainingTime));
+//        this.ioQueue = new PriorityQueue<Process>(new Comparator<Process>() {
+//
+//			@Override
+//			public int compare(Process p1, Process p2) {
+//				return p1.remainingTime() - p2.remainingTime();
+//			}
+//		});
         
     }
 
@@ -35,7 +37,7 @@ public class FCFS {
         String result = "Algorithm FCFS\n";
         //initialize arriveQueue and add process with arriveTime = 0 into readyList
         for (int i = 0; i < processes.length; i++) {
-        	if(processes[i].status() == Process.READY)
+        	if(processes[i].getState().equals(ProcessState.READY))
         	{
         		readyList.add(processes[i]);
 				System.out.println(String.format("Process %s has arrived at %dms", processes[i].id(), 0));
@@ -78,7 +80,7 @@ public class FCFS {
         	{
         		if(running.tick())
         		{
-        			if(running.status() == Process.ENDED)
+        			if(running.getState().equals(ProcessState.ENDED))
         			{
         				endNum++;
         				System.out.println(String.format("Process %s has terminated at %dms IOList: %d", running.id(), time, ioQueue.size()));
@@ -88,7 +90,7 @@ public class FCFS {
         			{
         				//status == Process.BLOCKED
         				ioQueue.add(running);
-        				System.out.println(String.format("Process %s has ended the %d/%d burst and start IO of %dms at %dms", running.id(), running.burstIndex(), running.burstSize(), running.remainTime(), time));
+        				System.out.println(String.format("Process %s has ended the %d/%d burst and start IO of %dms at %dms", running.id(), running.burstIndex(), running.burstSize(), running.remainingTime(), time));
         				running = Process.EMPTY;
         			}
         		}
