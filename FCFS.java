@@ -37,7 +37,7 @@ public class FCFS {
         String result = "Algorithm FCFS\n";
         //initialize arriveQueue and add process with arriveTime = 0 into readyList
         for (int i = 0; i < processes.length; i++) {
-        	if(processes[i].getState().equals(ProcessState.NA))
+        	if(processes[i].getState().equals(ProcessState.READY))
         	{
         		readyList.add(processes[i]);
 				System.out.println(String.format("Process %s has arrived at %dms", processes[i].id(), 0));

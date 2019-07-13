@@ -72,6 +72,8 @@ public class Process {
     {
     	return this.remainingTime;
     }
+
+    public int currentBurstTime() { return this.burstTimes[this.burstIndex]; }
     
     public int arriveTime()
     {
@@ -102,7 +104,9 @@ public class Process {
     {
     	switch (this.state) {
         case NA:
+        	// if the process has not arrived yet, decrease remaining time by one
 			remainingTime--;
+			// remaining time == 0 --> process has just arrived and is ready to use the cpu
 			if(remainingTime == 0)
 			{
 			    this.state = ProcessState.READY;
@@ -117,18 +121,20 @@ public class Process {
 			throw new RuntimeException("FUCK YOU BUG");
 			//return false;
 			
-		case RUNNING:
-			remainingTime--;
+		case RUNNING:             // the process is using the cpu
+			remainingTime--;      // decrease remaining cpu burst time by one
+
 			if(remainingTime == 0)
 			{
-				if(burstIndex == burstSize - 1)
+				if(burstIndex == burstSize - 1)         // finished current cpu burst
 				{
 					// status = ENDED;
-                    this.state = ProcessState.ENDED;
+                    this.state = ProcessState.ENDED;    // current burst is the last cpu burst of this process --> process finished
 					return true;
 				}
 				else
 				{
+					// more cpu bursts togo --> go to io burst
 					remainingTime = ioTimes[burstIndex];
 					this.state = ProcessState.BLOCKED;
 					// status = BLOCKED;
@@ -138,12 +144,15 @@ public class Process {
 			break;
 			
 		case BLOCKED:
+			// process is in io burst
+			// decrease current io burst time by one
 			remainingTime--;
-			if(remainingTime == 0)
+
+			if(remainingTime == 0)   // process finishes io burst
 			{
-				burstIndex++;
-				remainingTime = burstTimes[burstIndex];
-				this.state = ProcessState.READY;
+				burstIndex++;                               // goto next cpu burst
+				remainingTime = burstTimes[burstIndex];     // set remaining time for cpu burst
+				this.state = ProcessState.READY;            // change process state
 				// status = READY;
 				return true;
 			}
