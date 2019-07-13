@@ -20,9 +20,6 @@ public class Process {
 
 	private ProcessState state;
     private String id;
-    private int turnAroundTime;
-    private int cpuBurst;
-    private int waitTime;
     private int arriveTime;
     private int burstSize;
     private int remainingTime;
@@ -38,7 +35,6 @@ public class Process {
         this.burstTimes = new int[burstSize];
         this.ioTimes = new int[burstSize];
         this.remainingTime = arriveTime;
-        // this.status = NA;
         this.state = ProcessState.NA;
         
         for (int i = 0; i < burstSize - 1; i++) {
@@ -47,33 +43,22 @@ public class Process {
 		}
         burstTimes[burstSize - 1] = (int) (random()) + 1;
         
-        if(arriveTime == 0)
-        {
-        	// this.status = READY;
-        	this.state = ProcessState.READY;
-        	remainingTime = burstTimes[burstIndex];
-        }
-        // TODO
     }
 
-    public ProcessState getState() { return this.state; }
+    public ProcessState state() 
+    {
+    	return this.state; 
+    }
 
     public String id()
     {
     	return this.id;
     }
-
-//    public int status()
-//    {
-//    	return this.status;
-//    }
     
     public int remainingTime()
     {
     	return this.remainingTime;
     }
-
-    public int currentBurstTime() { return this.burstTimes[this.burstIndex]; }
     
     public int arriveTime()
     {
@@ -90,84 +75,131 @@ public class Process {
     	return this.burstSize;
     }
     
-    public void running()
+    public boolean isEnded()
     {
-    	// this.status = RUNNING;
-        this.state = ProcessState.RUNNING;
+    	return this.burstIndex == burstSize-1 && remainingTime == 0;
+    }
+    
+    /**
+     * also change the remainingTime
+     * @param stat
+     */
+    public void setState(ProcessState stat)
+    {
+    	this.state = stat;
+    	switch (state) {
+		case READY:
+			break;
+			
+		case SWITCHIN:
+			this.remainingTime = Project.timeSwitch / 2;
+			break;
+			
+		case RUNNING:
+			this.remainingTime = burstTimes[burstIndex];
+			break;
+			
+		case SWITCHOUT:
+			this.remainingTime = Project.timeSwitch / 2;
+			break;
+			
+		case BLOCKED:
+			this.remainingTime = ioTimes[burstIndex];
+			break;
+
+		case ENDED:
+			break;
+			
+		default:
+    		System.out.println(String.format("Error: Process %s setState to unexpected", id));
+			break;
+		}
+    }
+    
+    public void nextBurst()
+    {
+    	this.burstIndex++;
     }
     
     /**
      * 
-     * @return true if status is changed in this tick
+     * @return true if remainingTime == 0
      */
     public boolean tick()
     {
-    	switch (this.state) {
-        case NA:
-        	// if the process has not arrived yet, decrease remaining time by one
-			remainingTime--;
-			// remaining time == 0 --> process has just arrived and is ready to use the cpu
-			if(remainingTime == 0)
-			{
-			    this.state = ProcessState.READY;
-				// status = READY;
-				remainingTime = burstTimes[burstIndex];
-				return true;
-			}
-			break;
-
-		//TODO:
-		case READY:
-			throw new RuntimeException("FUCK YOU BUG");
-			//return false;
-			
-		case RUNNING:             // the process is using the cpu
-			remainingTime--;      // decrease remaining cpu burst time by one
-
-			if(remainingTime == 0)
-			{
-				if(burstIndex == burstSize - 1)         // finished current cpu burst
-				{
-					// status = ENDED;
-                    this.state = ProcessState.ENDED;    // current burst is the last cpu burst of this process --> process finished
-					return true;
-				}
-				else
-				{
-					// more cpu bursts togo --> go to io burst
-					remainingTime = ioTimes[burstIndex];
-					this.state = ProcessState.BLOCKED;
-					// status = BLOCKED;
-					return true;
-				}
-			}
-			break;
-			
-		case BLOCKED:
-			// process is in io burst
-			// decrease current io burst time by one
-			remainingTime--;
-
-			if(remainingTime == 0)   // process finishes io burst
-			{
-				burstIndex++;                               // goto next cpu burst
-				remainingTime = burstTimes[burstIndex];     // set remaining time for cpu burst
-				this.state = ProcessState.READY;            // change process state
-				// status = READY;
-				return true;
-			}
-			break;
-			
-		//TODO:
-		case ENDED:
-			System.out.println("FUCK YOU BUG, Process " + id + "ENDED");
-			return false;
-			
-		default:
-			System.out.println("FUCK YOU BUG");
-			return false;
-		}
-    	return false;
+    	if(remainingTime == 0)
+    	{
+    		System.out.println(String.format("Error: Process %s Ticking when remainingTime == 0", id));
+    	}
+    	remainingTime--;
+    	return remainingTime == 0;
+    	
+//    	switch (this.state) {
+//        case NA:
+//        	// if the process has not arrived yet, decrease remaining time by one
+//			remainingTime--;
+//			// remaining time == 0 --> process has just arrived and is ready to use the cpu
+//			if(remainingTime == 0)
+//			{
+//			    this.state = ProcessState.READY;
+//				// status = READY;
+//				remainingTime = burstTimes[burstIndex];
+//				return true;
+//			}
+//			break;
+//
+//		//TODO:
+//		case READY:
+//			throw new RuntimeException("FUCK YOU BUG");
+//			//return false;
+//			
+//		case RUNNING:             // the process is using the cpu
+//			remainingTime--;      // decrease remaining cpu burst time by one
+//
+//			if(remainingTime == 0)
+//			{
+//				if(burstIndex == burstSize - 1)         // finished current cpu burst
+//				{
+//					// status = ENDED;
+//                    this.state = ProcessState.ENDED;    // current burst is the last cpu burst of this process --> process finished
+//					return true;
+//				}
+//				else
+//				{
+//					// more cpu bursts togo --> go to io burst
+//					remainingTime = ioTimes[burstIndex];
+//					this.state = ProcessState.BLOCKED;
+//					// status = BLOCKED;
+//					return true;
+//				}
+//			}
+//			break;
+//			
+//		case BLOCKED:
+//			// process is in io burst
+//			// decrease current io burst time by one
+//			remainingTime--;
+//
+//			if(remainingTime == 0)   // process finishes io burst
+//			{
+//				burstIndex++;                               // goto next cpu burst
+//				remainingTime = burstTimes[burstIndex];     // set remaining time for cpu burst
+//				this.state = ProcessState.READY;            // change process state
+//				// status = READY;
+//				return true;
+//			}
+//			break;
+//			
+//		//TODO:
+//		case ENDED:
+//			System.out.println("FUCK YOU BUG, Process " + id + "ENDED");
+//			return false;
+//			
+//		default:
+//			System.out.println("FUCK YOU BUG");
+//			return false;
+//		}
+//    	return false;
     }
     
     public int estimateTime()
