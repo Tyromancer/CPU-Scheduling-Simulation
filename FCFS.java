@@ -13,7 +13,7 @@ public class FCFS {
     
     public FCFS() 
     {
-        this.processes = Process.generateProcesses();
+        this.processes = Process.generateProcesses(false);
         this.arriveQueue = new PriorityQueue<Process>(Comparator.comparing(Process::arriveTime));
         this.readyList = new LinkedList<Process>();
         this.ioList = new LinkedList<Process>();
