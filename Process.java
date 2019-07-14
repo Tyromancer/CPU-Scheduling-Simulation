@@ -28,7 +28,9 @@ public class Process {
     private int arriveTime;
     private int burstSize;
     private int remainingTime;
+    private int burstedTime;
     private int burstIndex;
+    private boolean preempted;
     private int[] burstTimes;
     private int[] ioTimes;
     private int[] estimateBurstTimes;
@@ -43,6 +45,8 @@ public class Process {
         this.ioTimes = new int[burstSize];
         this.remainingTime = arriveTime;
         this.state = ProcessState.NA;
+        this.preempted = false;
+        this.burstedTime = 0;
         
         for (int i = 0; i < burstSize - 1; i++) {
 			burstTimes[i] = (int) (random()) + 1;    // generate actual burst times
@@ -76,6 +80,16 @@ public class Process {
     	return this.remainingTime;
     }
     
+    public int burstedTime()
+    {
+    	return this.burstedTime;
+    }
+    
+    public void resetBurstedTime()
+    {
+    	this.burstedTime = 0;
+    }
+    
     public int arriveTime()
     {
     	return this.arriveTime;
@@ -89,6 +103,16 @@ public class Process {
     public int burstSize()
     {
     	return this.burstSize;
+    }
+    
+    public void setPreempted(boolean b)
+    {
+    	this.preempted = b;
+    }
+    
+    public boolean isPreempted()
+    {
+    	return this.preempted;
     }
     
     public int getIOTime()
@@ -158,6 +182,10 @@ public class Process {
     		System.out.println(String.format("Error: Process %s Ticking when remainingTime == 0", id));
     	}
     	remainingTime--;
+    	
+    	if(state == ProcessState.RUNNING)
+    		burstedTime++;
+    	
     	return remainingTime == 0;
     }
 

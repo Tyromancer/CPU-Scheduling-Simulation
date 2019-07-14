@@ -95,9 +95,11 @@ public class Project {
 
 		// TODO: create algo instances and run them
 		FCFS fcfs = new FCFS();
-		fcfs.runSimulation();
+		String fcfsStat = fcfs.runSimulation();
 		
 		System.out.println();
+		System.out.println("FCFS STAT:");
+		System.out.println(fcfsStat);
 		
 		SJF sjf = new SJF();
 		sjf.runSimulation();
