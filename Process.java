@@ -15,8 +15,9 @@ public class Process {
 		{
 			processed[i] = new Process(Character.toString((char) (65 + i)));
 			
-			if(showTau)
-				System.out.print(" (tau 100ms)");
+			if(showTau) {
+                System.out.print(String.format(" (tau %dms)", processed[i].estimateTime()));
+            }
 			System.out.println();
 		}
 		
@@ -59,9 +60,17 @@ public class Process {
 			ioTimes[i] = (int) (random()) + 1;
 		}
         burstTimes[burstSize - 1] = (int) (random()) + 1;
-        estimateBurstTimes[burstSize - 1] = (int) Math.ceil((Project.alpha * burstTimes[burstSize - 2]) + ((1 - Project.alpha) * estimateBurstTimes[burstSize - 2]));
-        
-        System.out.print(String.format("Process %s [NEW] (arrival time %d ms) %d CPU bursts", id, arriveTime, burstSize));
+        if (burstSize > 1) {
+            estimateBurstTimes[burstSize - 1] = (int) Math.ceil((Project.alpha * burstTimes[burstSize - 2]) + ((1 - Project.alpha) * estimateBurstTimes[burstSize - 2]));
+        } else if (burstSize == 1) {
+            estimateBurstTimes[0] = (int) Math.ceil(1.0 / Project.lamb);
+        }
+
+        if (burstSize != 1) {
+            System.out.print(String.format("Process %s [NEW] (arrival time %d ms) %d CPU bursts", id, arriveTime, burstSize));
+        } else {
+            System.out.print(String.format("Process %s [NEW] (arrival time %d ms) 1 CPU burst", id, arriveTime));
+        }
         
     }
 
@@ -89,6 +98,12 @@ public class Process {
     {
     	this.burstedTime = 0;
     }
+
+    public void setRemainingTime() {
+    	this.remainingTime = burstTimes[burstIndex] - burstedTime;
+	}
+
+	public void changeRemainingTime() { this.remainingTime -= this.burstedTime; }
     
     public int arriveTime()
     {
@@ -127,7 +142,7 @@ public class Process {
     
     public boolean isEnded()
     {
-    	return this.burstIndex == burstSize-1 && remainingTime == 0;
+    	return this.burstIndex == burstSize-1 && remainingTime == 0 && this.burstedTime == burstTimes[burstIndex];
     }
     
     /**
@@ -187,6 +202,10 @@ public class Process {
     		burstedTime++;
     	
     	return remainingTime == 0;
+    }
+
+    public int estimatedRemainingTime() {
+        return this.estimateBurstTimes[burstIndex] - this.burstedTime;
     }
 
     public int estimateTime()
