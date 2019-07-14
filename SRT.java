@@ -45,7 +45,6 @@ public class SRT {
         int finished = 0;
         int numProcesses = this.processes.length;
         List<Process> finishedIO = new ArrayList<>();
-        boolean ioPreemption = false;
 
         while (finished != numProcesses) {
             time++;
@@ -87,16 +86,11 @@ public class SRT {
                                 System.out.println(String.format("time %dms: Process %s (tau %dms) will preempt %s %s", time, readyQueue.peek().id(), readyQueue.peek().estimateTime(), current.id(), queueInfo()));
                                 current.setPreempted(true);
                                 current.setState(ProcessState.SWITCHOUT);  // if finished switch in and need to perform preemption, switch out
-                                // current.setRemainingTime();
-                                // readyQueue.add(current);
-                                // current = null;
-                                ioPreemption = false;
                             }
                             break;
 
                         case RUNNING:
                             current.setState(ProcessState.SWITCHOUT);
-                            ioPreemption = false;
                             if (current.isLastBurst()) {
                                 System.out.println(String.format("time %dms: Process %s terminated %s", time, current.id(), queueInfo()));
                             }
@@ -140,14 +134,6 @@ public class SRT {
                             break;
                     }
                 }
-//                else if (!readyQueue.isEmpty() && readyQueue.peek().estimateTime() < current.estimatedRemainingTime() && current.state().equals(ProcessState.RUNNING)) {
-//                    // current process did not change state (running) and preempt
-//                    current.setState(ProcessState.SWITCHOUT);
-//                    current.setPreempted(true);
-//                    // current.setRemainingTime();
-//                    ioPreemption = true;
-//
-//                }
             } else {
                 if (!this.readyQueue.isEmpty()) {
                     current = this.readyQueue.poll();
@@ -162,32 +148,22 @@ public class SRT {
                 }
             }
 
-            List<Process> tempProcesses = new ArrayList<>();
+            Collections.sort(finishedIO, Comparator.comparing(Process::id));
             // finished io processes
-            for (Process p : finishedIO) {
+            for (int i = 0; i < finishedIO.size(); i++) {
+                Process p = finishedIO.get(i);
                 p.nextBurst();               // move p to the next burst
                 ioList.remove(p);
                 readyQueue.add(p);
-                tempProcesses.add(p);
-//                if (ioPreemption != true && current != null && current.state().equals(ProcessState.RUNNING) && p.estimateTime() < current.remainingTime()) {
-//                    ioPreemption = true;
-//                }
-            }
-
-            // sort the new unblocked processes for printing
-            Collections.sort(tempProcesses, new ProcessComparator());
-            for (int i = 0; i < tempProcesses.size(); i++) {
-                if (i == 0 && current != null && current.state().equals(ProcessState.RUNNING) && tempProcesses.get(0).estimateTime() < current.estimatedRemainingTime()) {
+                if (i == 0 && current != null && current.state().equals(ProcessState.RUNNING) && p.estimateTime() < current.estimatedRemainingTime()) {
                     // TODO: time 24086, test 4
-                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; preempting %s %s", time, tempProcesses.get(0).id(), tempProcesses.get(0).estimateTime(), current.id(), queueInfo()));
+                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; preempting %s %s", time, p.id(), p.estimateTime(), current.id(), queueInfo()));
                     current.setState(ProcessState.SWITCHOUT);
                     current.setPreempted(true);
-                    ioPreemption = true;
                 } else {
-                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; added to ready queue %s", time, tempProcesses.get(i).id(), tempProcesses.get(i).estimateTime(), queueInfo()));
+                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()));
                 }
             }
-
 
             for (int i = 0; i < arriveNum; i++) {
                 Process p = arriveQueue.poll();
@@ -200,16 +176,6 @@ public class SRT {
         }
         System.out.println(String.format("time %dms: Simulator ended for SRT [Q <empty>]", time));
         return result;
-    }
-
-    private void reInsert() {
-        List<Process> temp = new LinkedList<>();
-        for (int i = 0; i < this.readyQueue.size(); i++) {
-            temp.add(this.readyQueue.poll());
-        }
-        for (int i = 0; i < temp.size(); i++) {
-            this.readyQueue.add(temp.get(i));
-        }
     }
 
     private String queueInfo() {
@@ -241,7 +207,7 @@ public class SRT {
             int t1 = o1.estimateTime() - o1.burstedTime();
             int t2 = o2.estimateTime() - o2.burstedTime();
             if (t1 == t2) {
-                return o1.id().compareToIgnoreCase(o2.id());
+                return o1.id().compareTo(o2.id());
             } else {
                 return t1 - t2;
             }
