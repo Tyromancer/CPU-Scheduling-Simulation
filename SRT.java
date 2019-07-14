@@ -80,14 +80,16 @@ public class SRT {
 
                         case SWITCHIN:
                             current.setState(ProcessState.RUNNING);
+                            current.setPreempted(false);
                             System.out.println(String.format("time %dms: Process %s (tau %dms) started using the CPU with %dms burst remaining %s", time, current.id(), current.estimateTime(), current.remainingTime() - current.burstedTime(), queueInfo()));
+                            current.changeRemainingTime();
                             if ( !readyQueue.isEmpty() && readyQueue.peek().estimateTime() < current.estimatedRemainingTime()) {
                                 System.out.println(String.format("time %dms: Process %s (tau %dms) will preempt %s %s", time, readyQueue.peek().id(), readyQueue.peek().estimateTime(), current.id(), queueInfo()));
                                 current.setPreempted(true);
                                 current.setState(ProcessState.SWITCHOUT);  // if finished switch in and need to perform preemption, switch out
-                                current.setRemainingTime();
-                                readyQueue.add(current);
-                                current = null;
+                                // current.setRemainingTime();
+                                // readyQueue.add(current);
+                                // current = null;
                                 ioPreemption = false;
                             }
                             break;
@@ -99,7 +101,12 @@ public class SRT {
                                 System.out.println(String.format("time %dms: Process %s terminated %s", time, current.id(), queueInfo()));
                             }
                             else {
-                                System.out.println(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d bursts to go %s", time, current.id(), current.estimateTime(), current.burstSize() - current.burstIndex() - 1, queueInfo()));
+                                if (current.burstSize() - current.burstIndex() - 1 != 1) {
+                                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d bursts to go %s", time, current.id(), current.estimateTime(), current.burstSize() - current.burstIndex() - 1, queueInfo()));
+                                } else {
+                                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d burst to go %s", time, current.id(), current.estimateTime(), current.burstSize() - current.burstIndex() - 1, queueInfo()));
+
+                                }
                                 System.out.println(String.format("time %dms: Recalculated tau = %dms for process %s %s", time, current.nextEstimateTime(), current.id(), queueInfo()));
                                 System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, current.id(), time + Project.timeSwitch / 2 + current.getIOTime(), queueInfo()));
                             }
@@ -108,12 +115,14 @@ public class SRT {
                         case SWITCHOUT:
                             if (current.isEnded()) {
                                 finished++;
+
                                 current.setState(ProcessState.ENDED);
 
                             } else {
                                 // if current was preempted, move the process to the ready queue
-                                if (current.isPreempted() && current.remainingTime() != 0) {
+                                if (current.isPreempted()) {
                                     current.setState(ProcessState.READY);
+                                    current.setRemainingTime();
                                     readyQueue.add(current);
                                 } else {
                                     current.setState(ProcessState.BLOCKED);
@@ -130,14 +139,15 @@ public class SRT {
                             System.out.println("Should not enter default branch");
                             break;
                     }
-                } else if (!readyQueue.isEmpty() && readyQueue.peek().estimateTime() < current.remainingTime()) {
-                    // current process did not change state (running) and preeempt
-                    current.setState(ProcessState.SWITCHOUT);
-                    current.setPreempted(true);
-                    current.setRemainingTime();
-                    ioPreemption = true;
-
                 }
+//                else if (!readyQueue.isEmpty() && readyQueue.peek().estimateTime() < current.estimatedRemainingTime() && current.state().equals(ProcessState.RUNNING)) {
+//                    // current process did not change state (running) and preempt
+//                    current.setState(ProcessState.SWITCHOUT);
+//                    current.setPreempted(true);
+//                    // current.setRemainingTime();
+//                    ioPreemption = true;
+//
+//                }
             } else {
                 if (!this.readyQueue.isEmpty()) {
                     current = this.readyQueue.poll();
@@ -159,33 +169,47 @@ public class SRT {
                 ioList.remove(p);
                 readyQueue.add(p);
                 tempProcesses.add(p);
-                if (ioPreemption != true && current != null && current.state().equals(ProcessState.RUNNING) && p.estimateTime() < current.remainingTime()) {
-                    ioPreemption = true;
-                }
+//                if (ioPreemption != true && current != null && current.state().equals(ProcessState.RUNNING) && p.estimateTime() < current.remainingTime()) {
+//                    ioPreemption = true;
+//                }
             }
 
             // sort the new unblocked processes for printing
-            if (ioPreemption && !tempProcesses.isEmpty()) {
-                Collections.sort(tempProcesses, new ProcessComparator());
-                for (int i = 0; i < tempProcesses.size(); i++) {
-                    if (i == 0 && current != null && !current.state().equals(ProcessState.RUNNING) && tempProcesses.get(0).estimateTime() < current.estimatedRemainingTime()) {
-                        System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; preempting %s %s", time, tempProcesses.get(0).id(), tempProcesses.get(0).estimateTime(), current.id(), queueInfo()));
-                    } else {
-                        System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; added to ready queue %s", time, tempProcesses.get(i).id(), tempProcesses.get(i).estimateTime(), queueInfo()));
-                    }
+            Collections.sort(tempProcesses, new ProcessComparator());
+            for (int i = 0; i < tempProcesses.size(); i++) {
+                if (i == 0 && current != null && current.state().equals(ProcessState.RUNNING) && tempProcesses.get(0).estimateTime() < current.estimatedRemainingTime()) {
+                    // TODO: time 24086, test 4
+                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; preempting %s %s", time, tempProcesses.get(0).id(), tempProcesses.get(0).estimateTime(), current.id(), queueInfo()));
+                    current.setState(ProcessState.SWITCHOUT);
+                    current.setPreempted(true);
+                    ioPreemption = true;
+                } else {
+                    System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; added to ready queue %s", time, tempProcesses.get(i).id(), tempProcesses.get(i).estimateTime(), queueInfo()));
                 }
             }
+
 
             for (int i = 0; i < arriveNum; i++) {
                 Process p = arriveQueue.poll();
                 p.setState(ProcessState.READY);
                 p.resetBurstedTime();
                 readyQueue.add(p);
+
                 System.out.println(String.format("time %dms: Process %s (tau %dms) arrived; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()));
             }
         }
-
+        System.out.println(String.format("time %dms: Simulator ended for SRT [Q <empty>]", time));
         return result;
+    }
+
+    private void reInsert() {
+        List<Process> temp = new LinkedList<>();
+        for (int i = 0; i < this.readyQueue.size(); i++) {
+            temp.add(this.readyQueue.poll());
+        }
+        for (int i = 0; i < temp.size(); i++) {
+            this.readyQueue.add(temp.get(i));
+        }
     }
 
     private String queueInfo() {
@@ -195,11 +219,19 @@ public class SRT {
         }
 
         String str = "[Q";
-        for(Process p : readyQueue)
-        {
-            str += String.format(" %s", p.id());
+
+        List<Process> tempList = new LinkedList<>();
+        while (readyQueue.peek() != null) {
+            tempList.add(readyQueue.poll());
+        }
+        Collections.sort(tempList, new ProcessComparator());
+        for (int i = 0; i < tempList.size(); i++) {
+            str += String.format(" %s", tempList.get(i).id());
         }
         str += "]";
+        for (int i = 0; i < tempList.size(); i++) {
+            readyQueue.add(tempList.get(i));
+        }
         return str;
     }
 
@@ -209,7 +241,7 @@ public class SRT {
             int t1 = o1.estimateTime() - o1.burstedTime();
             int t2 = o2.estimateTime() - o2.burstedTime();
             if (t1 == t2) {
-                return o1.id().compareTo(o2.id());
+                return o1.id().compareToIgnoreCase(o2.id());
             } else {
                 return t1 - t2;
             }

@@ -93,6 +93,8 @@ public class Process {
     public void setRemainingTime() {
     	this.remainingTime = burstTimes[burstIndex] - burstedTime;
 	}
+
+	public void changeRemainingTime() { this.remainingTime -= this.burstedTime; }
     
     public int arriveTime()
     {
@@ -131,7 +133,7 @@ public class Process {
     
     public boolean isEnded()
     {
-    	return this.burstIndex == burstSize-1 && remainingTime == 0;
+    	return this.burstIndex == burstSize-1 && remainingTime == 0 && this.burstedTime == burstTimes[burstIndex];
     }
     
     /**
