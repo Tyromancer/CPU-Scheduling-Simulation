@@ -13,7 +13,7 @@ public class FCFS {
     
     public FCFS() 
     {
-        this.processes = Process.generateProcesses();
+        this.processes = Process.generateProcesses(false);
         this.arriveQueue = new PriorityQueue<Process>(Comparator.comparing(Process::arriveTime));
         this.readyList = new LinkedList<Process>();
         this.ioList = new LinkedList<Process>();
@@ -33,7 +33,7 @@ public class FCFS {
         	{
         		processes[i].setState(ProcessState.READY);
         		readyList.add(processes[i]);
-				System.out.println(String.format("time %ms: Process %s arrived; added to ready queue %s", 0, processes[i].id(), queueInfo()));
+				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", 0, processes[i].id(), queueInfo()));
         	}
         	else
         	{

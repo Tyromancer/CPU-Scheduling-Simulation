@@ -1,123 +1,172 @@
 import java.util.*;
 
 public class SJF {
-    private Process[] processes;
+	private Process[] processes;
     private PriorityQueue<Process> arriveQueue;
-    private List<Process> ioList;
-    private LinkedList<Process> readyList;
     private PriorityQueue<Process> readyQueue;
+    private LinkedList<Process> ioList;
 
     public SJF() {
-        this.processes = Process.generateProcesses();
-        this.arriveQueue = new PriorityQueue<>(Comparator.comparing(Process::arriveTime));
-//        this.arriveQueue = new PriorityQueue<Process>(new Comparator<Process>() {
-//			@Override
-//			public int compare(Process p1, Process p2) {
-//				return p1.arriveTime() - p2.arriveTime();
-//			}
-//		});
-        this.readyQueue = new PriorityQueue<>((Process o1, Process o2) -> {
-                if (o1.estimateTime() == o2.estimateTime()) {
-                    return o1.id().compareTo(o2.id());
-                } else {
-                    return o1.estimateTime() - o2.estimateTime();
-                }
+    	this.processes = Process.generateProcesses(true);
+        this.arriveQueue = new PriorityQueue<Process>(Comparator.comparing(Process::arriveTime));
+        this.readyQueue = new PriorityQueue<Process>(new Comparator<Process>() {
 
-        });
-        this.readyList = new LinkedList<>();
-
-        this.ioList = new ArrayList<>();
-
+			@Override
+			public int compare(Process p1, Process p2) {
+				int e1 = p1.estimateTime();
+				int e2 = p2.estimateTime();
+				if(e1 == e2)
+					return p1.id().compareTo(p2.id());
+				else
+					return p1.estimateTime() - p2.estimateTime();
+			}
+		});
+        this.ioList = new LinkedList<Process>();
     }
 
     public String runSimulation() {
         String result = "Algorithm SJF\n";
-        for (Process p : processes) {
-            // if p arrived at 0ms, add it to the ready queue
-            if (p.state().equals(ProcessState.READY)) {
-                this.readyQueue.add(p);
-                System.out.println(String.format("Process %s has arrived at %dms", p.id(), 0));
-            } else {
-                arriveQueue.add(p);
-            }
+        System.out.println("time 0ms: Simulator started for SJF [Q <empty>]");
+
+        //initialize arriveQueue and add process with arriveTime = 0 into readyList
+        for (int i = 0; i < processes.length; i++) 
+        {
+        	
+        	
+        	if(processes[i].remainingTime() == 0)
+        	{
+        		processes[i].setState(ProcessState.READY);
+        		readyQueue.add(processes[i]);
+				System.out.println(String.format("time %dms: Process %s (tau %dms) arrived; added to ready queue %s", 0, processes[i].id(), processes[i].estimateTime(), queueInfo()));
+        	}
+        	else
+        	{
+        		arriveQueue.add(processes[i]);
+        	}
+		}
+
+        Process running = Process.EMPTY;
+        int time = 0;
+        int endNum = 0;
+        int processNum = processes.length;
+        LinkedList<Process> temp = new LinkedList<Process>();
+        
+        while(running != Process.EMPTY || endNum != processNum)
+        {
+        	time++;
+        	temp.clear();
+        	
+        	//Ticking processes in ioList
+        	for(Process p : ioList)
+        	{
+        		if(p.tick())
+        		{
+        			temp.add(p);
+        		}
+        	}
+        	
+        	//Ticking processes in arriveQueue
+        	int arriveNum = 0;
+        	for(Process p : arriveQueue)
+        	{
+        		if(p.tick())
+        		{
+        			arriveNum++;
+        		}
+        	}
+        	
+        	//Ticking processes in running
+        	if(running != Process.EMPTY)
+        	{
+        		if(running.tick())
+        		{
+        			switch (running.state()) {
+					case SWITCHIN:
+						running.setState(ProcessState.RUNNING);
+        				System.out.println(String.format("time %dms: Process %s (tau %dms) started using the CPU for %dms burst %s", time, running.id(), running.estimateTime(), running.remainingTime(), queueInfo()));
+						break;
+						
+					case RUNNING:
+						running.setState(ProcessState.SWITCHOUT);
+						if(running.isLastBurst())
+						{
+							System.out.println(String.format("time %dms: Process %s terminated %s", time, running.id(), queueInfo()));
+						}
+						else
+						{
+							System.out.println(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d bursts to go %s", time, running.id(), running.estimateTime(), running.burstSize() - running.burstIndex() - 1, queueInfo()));
+							System.out.println(String.format("time %dms: Recalculated tau = %dms for process %s %s", time, running.nextEstimateTime(), running.id(), queueInfo()));
+							System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()));
+	        			}
+						break;
+						
+					case SWITCHOUT:
+						if(running.isEnded())
+						{
+							endNum++;
+							running.setState(ProcessState.ENDED);
+	        			}
+						else
+						{
+							running.setState(ProcessState.BLOCKED);
+	        				ioList.add(running);
+						}
+						
+						running = Process.EMPTY;
+						break;
+
+					default:
+						System.out.println(String.format("ERROR: Process %s", running.id()));
+						break;
+					}
+        		}
+        	}
+        	else
+        	{
+        		if(!readyQueue.isEmpty()) 
+        		{
+        			running = readyQueue.poll();
+        			running.setState(ProcessState.SWITCHIN);
+        			if(running.tick())
+        			{
+        				running.setState(ProcessState.RUNNING);
+        				System.out.println(String.format("time %dms: Process %s (tau %dms) started using the CPU for %dms burst %s", time, running.id(), running.estimateTime(), running.remainingTime(), queueInfo()));
+					}
+    			}
+        	}
+        	
+        	for(Process p : temp)
+        	{
+        		p.nextBurst();
+        		ioList.remove(p);
+        		readyQueue.add(p);
+				System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()));
+        	}
+        	for(int i = 0; i < arriveNum; i++)
+        	{
+        		Process p = arriveQueue.remove();
+        		readyQueue.add(p);
+				System.out.println(String.format("time %dms: Process %s (tau %dms) arrived; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()));
+        	}
         }
-
-        // check if ready list has processes in it. If it does, set the first process in the list as currently running
-        Process current = Process.EMPTY;
-
-        int time = 1;                              // cpu time
-        int numFinished = 0;                       // number of processes finished
-        int numProcesses = this.processes.length;  // total number of processes
-        List<Process> finishedIO = new ArrayList<>();
-
-        while (numFinished != numProcesses) {
-
-            // IO completion
-            if (!finishedIO.isEmpty()) {
-                finishedIO.clear();
-            }
-            
-            for (Process p : ioList) {
-                if ( p.tick() ) {
-                    finishedIO.add(p);
-                }
-            }
-
-            int arriveNum = 0;
-            for (Process p : arriveQueue) {
-                if ( p.tick() ) {
-                    arriveNum++;
-                }
-            }
-
-            // CPU burst completion
-            if (current != Process.EMPTY) {
-                boolean status = current.tick();
-                if ( status ) {
-                    // TODO: add print
-                    switch ( current.state() ) {
-                        case SWITCHIN:
-
-                            current.setState(ProcessState.RUNNING);
-                            break;
-
-                        case RUNNING:
-                            current.setState(ProcessState.SWITCHOUT);
-                            break;
-                    }
-                }
-            }
-            
-
-//            if (current != Process.EMPTY) {
-//                boolean status = current.tick();
-//                if (status) {   // process changed state after tick --> end or goto io
-//                    if (current.state().equals(ProcessState.ENDED)) {
-//                        // process ended --> print message
-//                        System.out.println(String.format("Process %s has ended the %d/%d burst and start IO of %dms at %dms", current.id(), current.burstIndex(), current.burstSize(), current.remainingTime(), time));
-//                    } else {
-//                        // process goes to io --> add to ioQueue
-//                        ioQueue.add(current);
-//                        System.out.println(String.format("Process %s has ended the %d/%d burst and start IO of %dms at %dms", current.id(), current.burstIndex(), current.burstSize(), current.remainingTime(), time));
-//                    }
-//                    current = Process.EMPTY;
-//                }
-//            } else {   // if no process is using the cpu --> poll from the ready queue
-//                       // if ready queue is not empty, remove the first process in queue and set it as current process
-//                if (!readyQueue.isEmpty()) {
-//                    current = readyQueue.poll();
-//                    current.setState(ProcessState.RUNNING);
-//                    System.out.println(String.format("Process %s being processed at %dms", current.id(), time));
-//                }
-//            }
-            
-
-            // IO burst completion
-
-
-            // Newly arrived processes
-        }
-
+        
+        System.out.println(String.format("time %dms: Simulator ended for SJF %s", time, queueInfo()));
         return result;
+    }
+    
+    private String queueInfo()
+    {
+    	if(readyQueue.isEmpty())
+    	{
+    		return "[Q <empty>]";
+    	}
+    	
+    	String str = "[Q";
+    	for(Process p : readyQueue)
+    	{
+    		str += String.format(" %s", p.id());
+    	}
+    	str += "]";
+    	return str;
     }
 }
