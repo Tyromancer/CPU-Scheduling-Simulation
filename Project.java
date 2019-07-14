@@ -97,6 +97,8 @@ public class Project {
 		FCFS fcfs = new FCFS();
 		fcfs.runSimulation();
 		
+		System.out.println();
+		
 		SJF sjf = new SJF();
 		sjf.runSimulation();
     }
