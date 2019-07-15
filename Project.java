@@ -94,20 +94,29 @@ public class Project {
 		}
 
 		// TODO: create algo instances and run them
-//		FCFS fcfs = new FCFS();
-//		String fcfsStat = fcfs.runSimulation();
-//
-//		System.out.println();
-//		System.out.println("FCFS STAT:");
-//		System.out.println(fcfsStat);
-//
-//		SJF sjf = new SJF();
-//		sjf.runSimulation();
-		SRT srt = new SRT();
-		System.out.println(srt.runSimulation());
+		FCFS fcfs = new FCFS();
+		String fcfsStat = fcfs.runSimulation();
+		System.out.println();
+		System.out.println("FCFS STAT:");
+		System.out.println(fcfsStat);
+
+		SJF sjf = new SJF();
+		String sjfStat = sjf.runSimulation();
+		System.out.println();
+		System.out.println("SJF STAT:");
+		System.out.println(sjfStat);
 		
-//		RR rr = new RR();
-//		rr.runSimulation();
+		SRT srt = new SRT();
+		String srtStat = srt.runSimulation();
+		System.out.println();
+		System.out.println("SRT STAT:");
+		System.out.println(srtStat);
+		
+		RR rr = new RR();
+		String rrStat = rr.runSimulation();
+		System.out.println();
+		System.out.println("RR STAT:");
+		System.out.println(rrStat);
     }
 
 }

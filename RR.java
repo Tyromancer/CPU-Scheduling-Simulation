@@ -29,7 +29,10 @@ public class RR {
         	if(processes[i].remainingTime() == 0)
         	{
         		processes[i].setState(ProcessState.READY);
-        		readyList.add(processes[i]);
+        		if(Project.rrAdd.equals("END"))
+        			readyList.add(processes[i]);
+        		else
+        			readyList.addFirst(processes[i]);
 				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", 0, processes[i].id(), queueInfo()));
         	}
         	else
@@ -43,7 +46,10 @@ public class RR {
         int slice = Project.timeSlice;
         int endNum = 0;
         int processNum = processes.length;
+        int switchNum = 0;
+        int preemptNum = 0;
         LinkedList<Process> temp = new LinkedList<Process>();
+        Process tmp = null;
         
         while(running != Process.EMPTY || endNum != processNum)
         {
@@ -79,6 +85,7 @@ public class RR {
         			slice = Project.timeSlice;
         			if(running.tick())
         			{
+        				switchNum++;
         				running.setState(ProcessState.RUNNING);
         				running.setRemainingTime();
         				System.out.println(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()));
@@ -91,6 +98,7 @@ public class RR {
         		{
         			switch (running.state()) {
         			case SWITCHIN:
+        				switchNum++;
 						running.setState(ProcessState.RUNNING);
 						running.setRemainingTime();
 						if(running.isPreempted())
@@ -105,14 +113,20 @@ public class RR {
 						break;
 						
         			case SWITCHOUT:
+        				switchNum++;
         				if(running.isPreempted())
         				{
+        					tmp = running;
         					running.setState(ProcessState.READY);
-        					readyList.add(running);
+        					if(Project.rrAdd.equals("END"))
+                    			readyList.add(running);
+                    		else
+                    			readyList.addFirst(running);
         				}
         				else if(running.isLastBurst())
 						{
 							endNum++;
+							running.setEndTime(time);
 							running.resetBurstedTime();
 							running.setState(ProcessState.ENDED);
 	        			}
@@ -158,6 +172,7 @@ public class RR {
         					else
         					{
         						System.out.println(String.format("time %dms: Time slice expired; process %s preempted with %dms to go %s", time, running.id(), running.remainingTime(), queueInfo()));
+        						preemptNum++;
         						running.setPreempted(true);
         						running.setState(ProcessState.SWITCHOUT);
         					}
@@ -167,26 +182,84 @@ public class RR {
         		}
         	}
         	
-        	//Add from IO to READY
-        	for(Process p : temp)
+        	for(Process p : readyList)
         	{
-        		p.nextBurst();
-        		ioList.remove(p);
-        		readyList.add(p);
-				System.out.println(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()));
+        		if(p == tmp)
+        		{
+        			continue;
+        		}
+        		
+        		p.addWaitingTime();
+        	}
+        	tmp = null;
+        	
+        	//Add from IO to READY
+        	if(!temp.isEmpty())
+        	{
+        		temp.sort(Comparator.comparing(Process::id));
+        		for(Process p : temp)
+            	{
+            		p.nextBurst();
+            		ioList.remove(p);
+            		if(Project.rrAdd.equals("END"))
+            			readyList.add(p);
+            		else
+            			readyList.addFirst(p);
+    				System.out.println(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()));
+            	}
         	}
         	
         	//Add from ARRIVE to READY
         	for(int i = 0; i < arriveNum; i++)
         	{
         		Process p = arriveQueue.remove();
-    			readyList.add(p);
+        		if(Project.rrAdd.equals("END"))
+        			readyList.add(p);
+        		else
+        			readyList.addFirst(p);
 				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", time, p.id(), queueInfo()));
         	}
+        	
         }
 		
         System.out.println(String.format("time %dms: Simulator ended for RR %s", time, queueInfo()));
-		return result;
+        int burstNum = 0;
+        for(Process p : processes)
+        {
+        	burstNum += p.burstSize();
+        }
+        
+        switchNum /= 2;
+        
+        double avgBurstTime = 0;
+        for(Process p : processes)
+        {
+        	avgBurstTime += p.totalBurstTime();
+        }
+        avgBurstTime = avgBurstTime / burstNum;
+        
+        double avgWaitTime = 0;
+        for(Process p : processes)
+        {
+        	avgWaitTime += p.getWaitingTime();
+        }
+        avgWaitTime /= burstNum;
+        
+        double avgTurnaroundTime = 0;
+        for(Process p : processes)
+        {
+        	avgTurnaroundTime += p.endTime() - p.arriveTime() - p.getTotalIOTime();
+        }
+        avgTurnaroundTime /= burstNum;
+        
+        result += String.format("-- average CPU burst time: %.3f ms\n" + 
+        		"-- average wait time: %.3f ms\n" + 
+        		"-- average turnaround time: %.3f ms\n" + 
+        		"-- total number of context switches: %d\n" + 
+        		"-- total number of preemptions: %d\n",
+        		avgBurstTime, avgWaitTime, avgTurnaroundTime, switchNum, preemptNum);
+
+        return result;
 	}
 	
     private String queueInfo()
