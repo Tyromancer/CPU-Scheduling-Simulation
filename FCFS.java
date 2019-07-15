@@ -90,13 +90,14 @@ public class FCFS {
 						}
 						else
 						{
-							System.out.println(String.format("time %dms: Process %s completed a CPU burst; %d bursts to go %s", time, running.id(), running.burstSize() - running.burstIndex() - 1, queueInfo()));
+							int remainBurst = running.burstSize() - running.burstIndex() - 1;
+							System.out.println(String.format("time %dms: Process %s completed a CPU burst; %d burst%s to go %s", time, running.id(), remainBurst, remainBurst==1? "":"s", queueInfo()));
 							System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()));
 	        			}
 						break;
 						
 					case SWITCHOUT:
-						if(running.isEnded())
+						if(running.isLastBurst())
 						{
 							endNum++;
 							running.setState(ProcessState.ENDED);
