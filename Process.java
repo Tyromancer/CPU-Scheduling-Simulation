@@ -28,6 +28,7 @@ public class Process {
     private String id;
     private int arriveTime;
     private int endTime;
+    private int switchNum;
     private int burstSize;
     private int remainingTime;
     private int burstedTime;
@@ -49,6 +50,7 @@ public class Process {
         this.state = ProcessState.NA;
         this.preempted = false;
         this.burstedTime = 0;
+        this.switchNum = 0;
         
         for (int i = 0; i < burstSize - 1; i++) {
 			burstTimes[i] = (int) (random()) + 1;    // generate actual burst times
@@ -83,6 +85,16 @@ public class Process {
     public String id()
     {
     	return this.id;
+    }
+    
+    public int switchNum()
+    {
+    	return this.switchNum;
+    }
+    
+    public void addSwitch()
+    {
+    	switchNum++;
     }
     
     public int remainingTime()
