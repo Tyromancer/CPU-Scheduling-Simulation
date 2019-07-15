@@ -25,8 +25,22 @@ public class SRT {
     }
 
     public String runSimulation() {
+        // TODO :
+        // average CPU burst time
+        // average wait time
+        // average turnaround time
+        // total number of context switches
+        // total number of preemptions
+
         String result = "Algorithm SRT:\n";
         System.out.println("time 0ms: Simulator started for SRT [Q <empty>]");
+        int total = 0;
+        int totalBursts = 0;
+        for (Process p : this.processes) {
+            total += p.totalBurstTime();
+            totalBursts += p.burstSize();
+        }
+        result = result.concat(String.format("-- average CPU burst time: %3f\n", (double) total / (double) totalBursts));
 
         for (Process p : this.processes) {
             if (p.remainingTime() == 0) {
@@ -42,6 +56,10 @@ public class SRT {
 
         int time = 0;
         int finished = 0;
+
+        int totalContextSwitches = 0;
+        int totalPreemptions = 0;
+
         int numProcesses = this.processes.length;
         List<Process> finishedIO = new ArrayList<>();
 
@@ -87,13 +105,16 @@ public class SRT {
                                 if (time < 999) {
                                     System.out.println(String.format("time %dms: Process %s (tau %dms) will preempt %s %s", time, readyQueue.peek().id(), readyQueue.peek().estimateTime(), current.id(), queueInfo()));
                                 }
+                                totalPreemptions++;
                                 current.setPreempted(true);
                                 current.setState(ProcessState.SWITCHOUT);  // if finished switch in and need to perform preemption, switch out
+                                totalContextSwitches++;
                             }
                             break;
 
                         case RUNNING:
                             current.setState(ProcessState.SWITCHOUT);
+                            totalContextSwitches++;
                             if (current.isLastBurst()) {
                                 if (time < 999) {
                                     System.out.println(String.format("time %dms: Process %s terminated %s", time, current.id(), queueInfo()));
@@ -122,7 +143,7 @@ public class SRT {
                                 finished++;
 
                                 current.setState(ProcessState.ENDED);
-
+                                current.setEndTime(time);
                             } else {
                                 // if current was preempted, move the process to the ready queue
                                 if (current.isPreempted()) {
@@ -149,6 +170,7 @@ public class SRT {
                 if (!this.readyQueue.isEmpty()) {
                     current = this.readyQueue.poll();
                     current.setState(ProcessState.SWITCHIN);
+                    totalContextSwitches++;
 
                     boolean changedState = current.tick();
                     if ( changedState ) {
@@ -158,6 +180,11 @@ public class SRT {
                         }
                     }
                 }
+            }
+
+            // add waiting time for all processes in the ready queue
+            for (Process p : readyQueue) {
+                p.addWaitingTime();
             }
 
             Collections.sort(finishedIO, Comparator.comparing(Process::id));
@@ -173,6 +200,8 @@ public class SRT {
                         System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; preempting %s %s", time, p.id(), p.estimateTime(), current.id(), queueInfo()));
                     }
                     current.setState(ProcessState.SWITCHOUT);
+                    totalPreemptions++;
+                    totalContextSwitches++;
                     current.setPreempted(true);
                 } else {
                     if (time < 999) {
@@ -192,6 +221,23 @@ public class SRT {
                 }
             }
         }
+
+
+        int totalWaitingTime = 0;
+        for (Process p : processes) {
+            totalWaitingTime += p.getWaitingTime();
+        }
+        result += String.format("-- average wait time: %3fms\n", (double) totalWaitingTime / (double) totalBursts);
+
+        int totalTurnaroundTime = 0;
+        for (Process p : processes) {
+            totalTurnaroundTime += (p.endTime() - p.arriveTime() - p.getTotalIOTime());
+        }
+        result += String.format("-- average turnaround time: %3fms\n", (double) totalTurnaroundTime / (double) totalBursts);
+
+        result += String.format("-- total number of context switches: %d\n", totalContextSwitches / 2);
+        result += String.format("-- total number of preemptions: %d\n", totalPreemptions);
+
         System.out.println(String.format("time %dms: Simulator ended for SRT [Q <empty>]", time));
         return result;
     }
