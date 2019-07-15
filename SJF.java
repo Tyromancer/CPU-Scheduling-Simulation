@@ -94,14 +94,15 @@ public class SJF {
 						}
 						else
 						{
-							System.out.println(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d bursts to go %s", time, running.id(), running.estimateTime(), running.burstSize() - running.burstIndex() - 1, queueInfo()));
+							int remainBurst = running.burstSize() - running.burstIndex() - 1;
+							System.out.println(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d burst%s to go %s", time, running.id(), running.estimateTime(), remainBurst, remainBurst==1? "":"s", queueInfo()));
 							System.out.println(String.format("time %dms: Recalculated tau = %dms for process %s %s", time, running.nextEstimateTime(), running.id(), queueInfo()));
 							System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()));
 	        			}
 						break;
 						
 					case SWITCHOUT:
-						if(running.isEnded())
+						if(running.isLastBurst())
 						{
 							endNum++;
 							running.setState(ProcessState.ENDED);

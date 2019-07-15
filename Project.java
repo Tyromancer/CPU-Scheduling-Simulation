@@ -94,8 +94,8 @@ public class Project {
 		}
 
 		// TODO: create algo instances and run them
-//		FCFS fcfs = new FCFS();
-//		String fcfsStat = fcfs.runSimulation();
+		FCFS fcfs = new FCFS();
+		String fcfsStat = fcfs.runSimulation();
 //
 //		System.out.println();
 //		System.out.println("FCFS STAT:");
@@ -103,8 +103,11 @@ public class Project {
 //
 //		SJF sjf = new SJF();
 //		sjf.runSimulation();
-		SRT srt = new SRT();
-		srt.runSimulation();
+//		SRT srt = new SRT();
+//		srt.runSimulation();
+		
+//		RR rr = new RR();
+//		rr.runSimulation();
     }
 
 }
