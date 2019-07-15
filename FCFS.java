@@ -147,6 +147,26 @@ public class FCFS {
         }
         
         System.out.println(String.format("time %dms: Simulator ended for FCFS %s", time, queueInfo()));
+        
+        int switchNum = 0;
+        for(Process p : processes)
+        {
+        	switchNum += p.burstSize();
+        }
+        double avgBurstTime = 0;
+        for(Process p : processes)
+        {
+        	avgBurstTime += p.totalBurstTime();
+        }
+        avgBurstTime = avgBurstTime / switchNum;
+        double avgWaitTime = 0;
+        double avgTurnaroundTime = 0;
+        result += String.format("-- average CPU burst time: %.3f ms\n" + 
+        		"-- average wait time: %.3f ms\n" + 
+        		"-- average turnaround time: %.3f ms\n" + 
+        		"-- total number of context switches: %d\n" + 
+        		"-- total number of preemptions: 0\n",
+        		avgBurstTime, avgWaitTime, avgTurnaroundTime, switchNum);
         return result;
     }
     

@@ -27,6 +27,7 @@ public class Process {
 	private ProcessState state;
     private String id;
     private int arriveTime;
+    private int endTime;
     private int burstSize;
     private int remainingTime;
     private int burstedTime;
@@ -143,6 +144,26 @@ public class Process {
     public boolean isEnded()
     {
     	return this.burstIndex == burstSize-1 && remainingTime == 0 && this.burstedTime == burstTimes[burstIndex];
+    }
+    
+    public int endTime()
+    {
+    	return this.endTime;
+    }
+    
+    public void setEndTime(int time)
+    {
+    	this.endTime = time;
+    }
+    
+    public int totalBurstTime()
+    {
+    	int num = 0;
+    	for (int i = 0; i < burstTimes.length; i++) 
+    	{
+			num += burstTimes[i];
+		}
+    	return num;
     }
     
     /**
