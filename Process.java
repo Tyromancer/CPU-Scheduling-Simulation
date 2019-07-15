@@ -33,6 +33,7 @@ public class Process {
     private int remainingTime;
     private int burstedTime;
     private int burstIndex;
+    private int waitingTime;
     private boolean preempted;
     private int[] burstTimes;
     private int[] ioTimes;
@@ -47,6 +48,7 @@ public class Process {
         this.estimateBurstTimes = new int[burstSize];
         this.ioTimes = new int[burstSize];
         this.remainingTime = arriveTime;
+        this.waitingTime = 0;
         this.state = ProcessState.NA;
         this.preempted = false;
         this.burstedTime = 0;
@@ -147,6 +149,13 @@ public class Process {
     {
     	return this.ioTimes[burstIndex];
     }
+    public int getTotalIOTime() {
+        int total = 0;
+        for (int t : ioTimes) {
+            total += t;
+        }
+        return total;
+    }
     
     public boolean isLastBurst()
     {
@@ -177,6 +186,11 @@ public class Process {
 		}
     	return num;
     }
+
+    public int getWaitingTime() {
+        return this.waitingTime;
+    }
+    public void addWaitingTime() { this.waitingTime++; }
     
     /**
      * also change the remainingTime
@@ -231,8 +245,12 @@ public class Process {
     	}
     	remainingTime--;
     	
-    	if(state == ProcessState.RUNNING)
-    		burstedTime++;
+    	if(state == ProcessState.RUNNING) {
+            burstedTime++;
+        }
+    	if (state.equals(ProcessState.READY)) {
+    	    waitingTime++;
+        }
     	
     	return remainingTime == 0;
     }
