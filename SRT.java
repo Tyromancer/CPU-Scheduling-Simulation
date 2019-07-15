@@ -40,7 +40,7 @@ public class SRT {
             total += p.totalBurstTime();
             totalBursts += p.burstSize();
         }
-        result = result.concat(String.format("-- average CPU burst time: %3f\n", (double) total / (double) totalBursts));
+        result = result.concat(String.format("-- average CPU burst time: %.3f\n", (double) total / (double) totalBursts));
 
         for (Process p : this.processes) {
             if (p.remainingTime() == 0) {
@@ -62,6 +62,8 @@ public class SRT {
 
         int numProcesses = this.processes.length;
         List<Process> finishedIO = new ArrayList<>();
+
+        String preemptedID = "";
 
         while (finished != numProcesses) {
             time++;
@@ -150,6 +152,7 @@ public class SRT {
                                     current.setState(ProcessState.READY);
                                     current.setRemainingTime();
                                     readyQueue.add(current);
+                                    preemptedID = current.id();
                                 } else {
                                     current.setState(ProcessState.BLOCKED);
                                     current.resetBurstedTime();
@@ -184,8 +187,12 @@ public class SRT {
 
             // add waiting time for all processes in the ready queue
             for (Process p : readyQueue) {
-                p.addWaitingTime();
+                if (!p.id().equals(preemptedID)) {
+                    p.addWaitingTime();
+                }
+
             }
+            preemptedID = "";
 
             Collections.sort(finishedIO, Comparator.comparing(Process::id));
             // finished io processes
@@ -227,13 +234,13 @@ public class SRT {
         for (Process p : processes) {
             totalWaitingTime += p.getWaitingTime();
         }
-        result += String.format("-- average wait time: %3fms\n", (double) totalWaitingTime / (double) totalBursts);
+        result += String.format("-- average wait time: %.3fms\n", (double) totalWaitingTime / (double) totalBursts);
 
         int totalTurnaroundTime = 0;
         for (Process p : processes) {
             totalTurnaroundTime += (p.endTime() - p.arriveTime() - p.getTotalIOTime());
         }
-        result += String.format("-- average turnaround time: %3fms\n", (double) totalTurnaroundTime / (double) totalBursts);
+        result += String.format("-- average turnaround time: %.3fms\n", (double) totalTurnaroundTime / (double) totalBursts);
 
         result += String.format("-- total number of context switches: %d\n", totalContextSwitches / 2);
         result += String.format("-- total number of preemptions: %d\n", totalPreemptions);
