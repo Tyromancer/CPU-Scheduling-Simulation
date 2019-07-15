@@ -105,6 +105,7 @@ public class SJF {
 						if(running.isLastBurst())
 						{
 							endNum++;
+							running.setEndTime(time);
 							running.setState(ProcessState.ENDED);
 	        			}
 						else
@@ -136,12 +137,21 @@ public class SJF {
     			}
         	}
         	
-        	for(Process p : temp)
+        	for(Process p : readyQueue)
         	{
-        		p.nextBurst();
-        		ioList.remove(p);
-        		readyQueue.add(p);
-				System.out.println(String.format("time %dms: Process %s (tau %dms) completed I/O; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()));
+        		p.addWaitingTime();
+        	}
+        	//Add from IO to READY
+        	if(!temp.isEmpty())
+        	{
+        		temp.sort(Comparator.comparing(Process::id));
+        		for(Process p : temp)
+            	{
+            		p.nextBurst();
+            		ioList.remove(p);
+            		readyQueue.add(p);
+    				System.out.println(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()));
+            	}
         	}
         	for(int i = 0; i < arriveNum; i++)
         	{
@@ -152,6 +162,41 @@ public class SJF {
         }
         
         System.out.println(String.format("time %dms: Simulator ended for SJF %s", time, queueInfo()));
+        int burstNum = 0;
+        for(Process p : processes)
+        {
+        	burstNum += p.burstSize();
+        }
+        int switchNum = burstNum;
+        
+        double avgBurstTime = 0;
+        for(Process p : processes)
+        {
+        	avgBurstTime += p.totalBurstTime();
+        }
+        avgBurstTime = avgBurstTime / burstNum;
+        
+        double avgWaitTime = 0;
+        for(Process p : processes)
+        {
+        	avgWaitTime += p.getWaitingTime();
+        }
+        avgWaitTime /= burstNum;
+        
+        double avgTurnaroundTime = 0;
+        for(Process p : processes)
+        {
+        	avgTurnaroundTime += p.endTime() - p.arriveTime() - p.getTotalIOTime();
+        }
+        avgTurnaroundTime /= burstNum;
+        
+        result += String.format("-- average CPU burst time: %.3f ms\n" + 
+        		"-- average wait time: %.3f ms\n" + 
+        		"-- average turnaround time: %.3f ms\n" + 
+        		"-- total number of context switches: %d\n" + 
+        		"-- total number of preemptions: 0\n",
+        		avgBurstTime, avgWaitTime, avgTurnaroundTime, switchNum);
+        
         return result;
     }
     
