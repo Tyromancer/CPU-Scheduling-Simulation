@@ -161,12 +161,13 @@ public class FCFS {
         }
         avgBurstTime = avgBurstTime / switchNum;
         double avgWaitTime = 0;
+        
         double avgTurnaroundTime = 0;
         for(Process p : processes)
         {
         	avgTurnaroundTime = avgTurnaroundTime + p.endTime() - p.arriveTime();
         }
-        avgTurnaroundTime /= processes.length;
+        avgTurnaroundTime /= switchNum;
         result += String.format("-- average CPU burst time: %.3f ms\n" + 
         		"-- average wait time: %.3f ms\n" + 
         		"-- average turnaround time: %.3f ms\n" + 
