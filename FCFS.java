@@ -189,7 +189,7 @@ public class FCFS {
         		"-- average turnaround time: %.3f ms\n" + 
         		"-- total number of context switches: %d\n" + 
         		"-- total number of preemptions: 0\n",
-        		avgBurstTime, avgWaitTime, avgTurnaroundTime, switchNum);
+        		halfOut(avgBurstTime), halfOut(avgWaitTime), halfOut(avgTurnaroundTime), switchNum);
         return result;
     }
     
@@ -207,6 +207,15 @@ public class FCFS {
     	}
     	str += "]";
     	return str;
+    }
+    
+    private double halfOut(double num)
+    {
+    	num *= 10000;
+    	if(num % 10 == 5)
+    		num--;
+    	num /= 10000;
+    	return num;
     }
     
     private void print(String str, int time)

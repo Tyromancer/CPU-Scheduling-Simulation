@@ -195,9 +195,18 @@ public class SJF {
         		"-- average turnaround time: %.3f ms\n" + 
         		"-- total number of context switches: %d\n" + 
         		"-- total number of preemptions: 0\n",
-        		avgBurstTime, avgWaitTime, avgTurnaroundTime, switchNum);
+        		halfOut(avgBurstTime), halfOut(avgWaitTime), halfOut(avgTurnaroundTime), switchNum);
         
         return result;
+    }
+    
+    private double halfOut(double num)
+    {
+    	num *= 10000;
+    	if(num % 10 == 5)
+    		num--;
+    	num /= 10000;
+    	return num;
     }
     
     private String queueInfo() {
