@@ -88,7 +88,7 @@ public class RR {
         				switchNum++;
         				running.setState(ProcessState.RUNNING);
         				running.setRemainingTime();
-        				System.out.println(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()));
+        				print(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()), time);
 					}
         		}
         	}
@@ -104,11 +104,11 @@ public class RR {
 						if(running.isPreempted())
 						{
 							running.setPreempted(false);
-							System.out.println(String.format("time %dms: Process %s started using the CPU with %dms burst remaining %s", time, running.id(), running.remainingTime(), queueInfo()));
+							print(String.format("time %dms: Process %s started using the CPU with %dms burst remaining %s", time, running.id(), running.remainingTime(), queueInfo()), time);
 						}
 						else
 						{
-							System.out.println(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()));
+							print(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()), time);
 						}
 						break;
 						
@@ -148,8 +148,8 @@ public class RR {
 						else
 						{
 							int remainBurst = running.burstSize() - running.burstIndex() - 1;
-							System.out.println(String.format("time %dms: Process %s completed a CPU burst; %d burst%s to go %s", time, running.id(), remainBurst, remainBurst==1? "":"s", queueInfo()));
-							System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()));
+							print(String.format("time %dms: Process %s completed a CPU burst; %d burst%s to go %s", time, running.id(), remainBurst, remainBurst==1? "":"s", queueInfo()), time);
+							print(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()), time);
 	        			}
 						break;
 
@@ -167,11 +167,11 @@ public class RR {
         				{
         					if(readyList.isEmpty())
         					{
-        						System.out.println(String.format("time %dms: Time slice expired; no preemption because ready queue is empty %s", time, queueInfo()));
+        						print(String.format("time %dms: Time slice expired; no preemption because ready queue is empty %s", time, queueInfo()), time);
         					}
         					else
         					{
-        						System.out.println(String.format("time %dms: Time slice expired; process %s preempted with %dms to go %s", time, running.id(), running.remainingTime(), queueInfo()));
+        						print(String.format("time %dms: Time slice expired; process %s preempted with %dms to go %s", time, running.id(), running.remainingTime(), queueInfo()), time);
         						preemptNum++;
         						running.setPreempted(true);
         						running.setState(ProcessState.SWITCHOUT);
@@ -205,7 +205,7 @@ public class RR {
             			readyList.add(p);
             		else
             			readyList.addFirst(p);
-    				System.out.println(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()));
+            		print(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()), time);
             	}
         	}
         	
@@ -217,7 +217,7 @@ public class RR {
         			readyList.add(p);
         		else
         			readyList.addFirst(p);
-				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", time, p.id(), queueInfo()));
+        		print(String.format("time %dms: Process %s arrived; added to ready queue %s", time, p.id(), queueInfo()), time);
         	}
         	
         }
@@ -277,4 +277,11 @@ public class RR {
     	str += "]";
     	return str;
     }
+    
+    private void print(String str, int time)
+    {
+    	if(time < 1000)
+    		System.out.println(str);
+    }
+
 }

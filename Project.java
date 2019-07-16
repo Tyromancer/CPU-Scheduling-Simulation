@@ -92,31 +92,35 @@ public class Project {
 		if (args.length == 8 && args[7].equals("BEGINNING")) {
 			rrAdd = "BEGINNING";
 		}
-
-		// TODO: create algo instances and run them
+		
+		//run algorithms
 		FCFS fcfs = new FCFS();
 		String fcfsStat = fcfs.runSimulation();
 		System.out.println();
-		System.out.println("FCFS STAT:");
-		System.out.println(fcfsStat);
 
 		SJF sjf = new SJF();
 		String sjfStat = sjf.runSimulation();
 		System.out.println();
-		System.out.println("SJF STAT:");
-		System.out.println(sjfStat);
 		
 		SRT srt = new SRT();
 		String srtStat = srt.runSimulation();
 		System.out.println();
-		System.out.println("SRT STAT:");
-		System.out.println(srtStat);
 		
 		RR rr = new RR();
 		String rrStat = rr.runSimulation();
-		System.out.println();
-		System.out.println("RR STAT:");
-		System.out.println(rrStat);
+
+		//output to file
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter("simout.txt"));
+			writer.write(fcfsStat);
+			writer.write(sjfStat);
+			writer.write(srtStat);
+			writer.write(rrStat);
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
 }

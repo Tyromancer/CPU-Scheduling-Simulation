@@ -83,7 +83,7 @@ public class SJF {
         			switch (running.state()) {
 					case SWITCHIN:
 						running.setState(ProcessState.RUNNING);
-        				System.out.println(String.format("time %dms: Process %s (tau %dms) started using the CPU for %dms burst %s", time, running.id(), running.estimateTime(), running.remainingTime(), queueInfo()));
+        				print(String.format("time %dms: Process %s (tau %dms) started using the CPU for %dms burst %s", time, running.id(), running.estimateTime(), running.remainingTime(), queueInfo()), time);
 						break;
 						
 					case RUNNING:
@@ -95,9 +95,9 @@ public class SJF {
 						else
 						{
 							int remainBurst = running.burstSize() - running.burstIndex() - 1;
-							System.out.println(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d burst%s to go %s", time, running.id(), running.estimateTime(), remainBurst, remainBurst==1? "":"s", queueInfo()));
-							System.out.println(String.format("time %dms: Recalculated tau = %dms for process %s %s", time, running.nextEstimateTime(), running.id(), queueInfo()));
-							System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()));
+							print(String.format("time %dms: Process %s (tau %dms) completed a CPU burst; %d burst%s to go %s", time, running.id(), running.estimateTime(), remainBurst, remainBurst==1? "":"s", queueInfo()), time);
+							print(String.format("time %dms: Recalculated tau = %dms for process %s %s", time, running.nextEstimateTime(), running.id(), queueInfo()), time);
+							print(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()), time);
 	        			}
 						break;
 						
@@ -132,7 +132,7 @@ public class SJF {
         			if(running.tick())
         			{
         				running.setState(ProcessState.RUNNING);
-        				System.out.println(String.format("time %dms: Process %s (tau %dms) started using the CPU for %dms burst %s", time, running.id(), running.estimateTime(), running.remainingTime(), queueInfo()));
+        				print(String.format("time %dms: Process %s (tau %dms) started using the CPU for %dms burst %s", time, running.id(), running.estimateTime(), running.remainingTime(), queueInfo()), time);
 					}
     			}
         	}
@@ -150,14 +150,14 @@ public class SJF {
             		p.nextBurst();
             		ioList.remove(p);
             		readyQueue.add(p);
-    				System.out.println(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()));
+            		print(String.format("time %dms: Process %s (tau %dms) completed I/O; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()), time);
             	}
         	}
         	for(int i = 0; i < arriveNum; i++)
         	{
         		Process p = arriveQueue.remove();
         		readyQueue.add(p);
-				System.out.println(String.format("time %dms: Process %s (tau %dms) arrived; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()));
+        		print(String.format("time %dms: Process %s (tau %dms) arrived; added to ready queue %s", time, p.id(), p.estimateTime(), queueInfo()), time);
         	}
         }
         
@@ -200,19 +200,31 @@ public class SJF {
         return result;
     }
     
-    private String queueInfo()
-    {
-    	if(readyQueue.isEmpty())
-    	{
-    		return "[Q <empty>]";
-    	}
-    	
-    	String str = "[Q";
-    	for(Process p : readyQueue)
-    	{
-    		str += String.format(" %s", p.id());
-    	}
-    	str += "]";
-    	return str;
+    private String queueInfo() {
+        if(this.readyQueue.isEmpty())
+        {
+            return "[Q <empty>]";
+        }
+
+        String str = "[Q";
+
+        List<Process> tempList = new LinkedList<>();
+        while (readyQueue.peek() != null) {
+        	Process p = readyQueue.poll();
+        	str += " " + p.id();
+            tempList.add(p);
+        }
+
+        str += "]";
+        readyQueue.addAll(tempList);
+        
+        return str;
     }
+    
+    private void print(String str, int time)
+    {
+    	if(time < 1000)
+    		System.out.println(str);
+    }
+
 }
