@@ -33,7 +33,7 @@ public class FCFS {
         	{
         		processes[i].setState(ProcessState.READY);
         		readyList.add(processes[i]);
-				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", 0, processes[i].id(), queueInfo()));
+        		print(String.format("time %dms: Process %s arrived; added to ready queue %s", 0, processes[i].id(), queueInfo()), 0);
         	}
         	else
         	{
@@ -79,7 +79,7 @@ public class FCFS {
         			switch (running.state()) {
 					case SWITCHIN:
 						running.setState(ProcessState.RUNNING);
-        				System.out.println(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()));
+						print(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()), time);
 						break;
 						
 					case RUNNING:
@@ -91,8 +91,8 @@ public class FCFS {
 						else
 						{
 							int remainBurst = running.burstSize() - running.burstIndex() - 1;
-							System.out.println(String.format("time %dms: Process %s completed a CPU burst; %d burst%s to go %s", time, running.id(), remainBurst, remainBurst==1? "":"s", queueInfo()));
-							System.out.println(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()));
+							print(String.format("time %dms: Process %s completed a CPU burst; %d burst%s to go %s", time, running.id(), remainBurst, remainBurst==1? "":"s", queueInfo()), time);
+							print(String.format("time %dms: Process %s switching out of CPU; will block on I/O until time %dms %s", time, running.id(), time + Project.timeSwitch / 2 + running.getIOTime(), queueInfo()), time);
 	        			}
 						break;
 						
@@ -112,9 +112,6 @@ public class FCFS {
 						running = Process.EMPTY;
 						break;
 
-					default:
-						System.out.println(String.format("ERROR: Process %s", running.id()));
-						break;
 					}
         		}
         	}
@@ -127,7 +124,7 @@ public class FCFS {
         			if(running.tick())
         			{
         				running.setState(ProcessState.RUNNING);
-        				System.out.println(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()));
+        				print(String.format("time %dms: Process %s started using the CPU for %dms burst %s", time, running.id(), running.remainingTime(), queueInfo()), time);
 					}
     			}
         	}
@@ -146,14 +143,14 @@ public class FCFS {
             		p.nextBurst();
             		ioList.remove(p);
             		readyList.add(p);
-    				System.out.println(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()));
+            		print(String.format("time %dms: Process %s completed I/O; added to ready queue %s", time, p.id(), queueInfo()), time);
             	}
         	}
         	for(int i = 0; i < arriveNum; i++)
         	{
         		Process p = arriveQueue.remove();
     			readyList.add(p);
-				System.out.println(String.format("time %dms: Process %s arrived; added to ready queue %s", time, p.id(), queueInfo()));
+				print(String.format("time %dms: Process %s arrived; added to ready queue %s", time, p.id(), queueInfo()), time);
         	}
         }
         
@@ -210,6 +207,12 @@ public class FCFS {
     	}
     	str += "]";
     	return str;
+    }
+    
+    private void print(String str, int time)
+    {
+    	if(time < 1000)
+    		System.out.println(str);
     }
 
 }
