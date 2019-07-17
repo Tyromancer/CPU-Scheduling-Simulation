@@ -108,6 +108,9 @@ public class Project {
 		
 		RR rr = new RR();
 		String rrStat = rr.runSimulation();
+		
+		PR pr = new PR();
+		String prStat = pr.runSimulation();
 
 		//output to file
 		try {
@@ -116,6 +119,7 @@ public class Project {
 			writer.write(sjfStat);
 			writer.write(srtStat);
 			writer.write(rrStat);
+			writer.write(prStat);
 			writer.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
