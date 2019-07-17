@@ -34,6 +34,7 @@ public class Process {
     private int burstedTime;
     private int burstIndex;
     private int waitingTime;
+    private int currentWaitTime;
     private boolean preempted;
     private int[] burstTimes;
     private int[] ioTimes;
@@ -53,6 +54,7 @@ public class Process {
         this.preempted = false;
         this.burstedTime = 0;
         this.switchNum = 0;
+        this.currentWaitTime = 0;
         
         for (int i = 0; i < burstSize - 1; i++) {
 			burstTimes[i] = (int) (random()) + 1;    // generate actual burst times
@@ -97,6 +99,21 @@ public class Process {
     public void addSwitch()
     {
     	switchNum++;
+    }
+    
+    public int currentWaitTime()
+    {
+    	return this.currentWaitTime;
+    }
+    
+    public void resetCurrentWaitTime()
+    {
+    	this.currentWaitTime = 0;
+    }
+    
+    public void addCurrentWaitTime()
+    {
+    	this.currentWaitTime++;
     }
     
     public int remainingTime()

@@ -40,7 +40,7 @@ public class SRT {
             total += p.totalBurstTime();
             totalBursts += p.burstSize();
         }
-        result = result.concat(String.format("-- average CPU burst time: %.3f ms\n", (double) total / (double) totalBursts));
+        result = result.concat(String.format("-- average CPU burst time: %.3f ms\n", halfOut((double) total / (double) totalBursts)));
 
         for (Process p : this.processes) {
             if (p.remainingTime() == 0) {
@@ -232,13 +232,13 @@ public class SRT {
         for (Process p : processes) {
             totalWaitingTime += p.getWaitingTime();
         }
-        result += String.format("-- average wait time: %.3f ms\n", (double) totalWaitingTime / (double) totalBursts);
+        result += String.format("-- average wait time: %.3f ms\n", halfOut((double) totalWaitingTime / (double) totalBursts));
 
         int totalTurnaroundTime = 0;
         for (Process p : processes) {
             totalTurnaroundTime += (p.endTime() - p.arriveTime() - p.getTotalIOTime());
         }
-        result += String.format("-- average turnaround time: %.3f ms\n", (double) totalTurnaroundTime / (double) totalBursts);
+        result += String.format("-- average turnaround time: %.3f ms\n", halfOut((double) totalTurnaroundTime / (double) totalBursts));
 
         result += String.format("-- total number of context switches: %d\n", totalContextSwitches / 2);
         result += String.format("-- total number of preemptions: %d\n", totalPreemptions);
@@ -247,6 +247,15 @@ public class SRT {
         return result;
     }
 
+    private double halfOut(double num)
+    {
+    	num *= 10000;
+    	if(num % 10 == 5)
+    		num--;
+    	num /= 10000;
+    	return num;
+    }
+    
     private String queueInfo() {
         if(this.readyQueue.isEmpty())
         {
